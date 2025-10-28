@@ -18,7 +18,7 @@ function MoonIcon({ className }: { className?: string }) {
 }
 
 export default function ThemeToggle() {
-  const { theme, resolvedTheme, setTheme } = useThemeContext()
+  const { resolvedTheme, setTheme } = useThemeContext()
 
   return (
     <div className="flex items-center gap-2">
