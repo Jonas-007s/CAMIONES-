@@ -1,0 +1,18 @@
+async function obtenerDatos() {
+  try {
+    const response = await fetch('/api/datos');
+    const texto = await response.text(); // Primero obtener como texto
+    
+    // Verificar si hay contenido
+    if (!texto) {
+      throw new Error('Respuesta vacía del servidor');
+    }
+
+    // Intentar parsear el JSON
+    const data = JSON.parse(texto);
+    return data;
+  } catch (error) {
+    console.error('Error al procesar JSON:', error);
+    throw error;
+  }
+}

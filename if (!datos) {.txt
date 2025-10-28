@@ -1,0 +1,3 @@
+if (!datos) {
+  return res.status(404).json({ error: 'No se encontraron datos' });
+}

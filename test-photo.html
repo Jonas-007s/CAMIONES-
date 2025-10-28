@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Photo URLs</title>
+</head>
+<body>
+    <h1>Test de URLs de Fotos</h1>
+    
+    <h2>Foto 1: /uploads/50d87be469ab48e383a819f494147b32</h2>
+    <img src="http://localhost:3000/uploads/50d87be469ab48e383a819f494147b32.jpg" 
+         alt="Foto 1" 
+         style="max-width: 300px; border: 1px solid red;"
+         onload="console.log('✅ Foto 1 cargada')"
+         onerror="console.log('❌ Error cargando foto 1')">
+    
+    <h2>Foto 2: /uploads/1bd9126d4785419487cf390032ac98b7</h2>
+    <img src="http://localhost:3000/uploads/1bd9126d4785419487cf390032ac98b7.jpg" 
+         alt="Foto 2" 
+         style="max-width: 300px; border: 1px solid blue;"
+         onload="console.log('✅ Foto 2 cargada')"
+         onerror="console.log('❌ Error cargando foto 2')">
+         
+    <script>
+        console.log('🔍 Página de prueba cargada');
+    </script>
+</body>
+</html>
