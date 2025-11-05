@@ -1,0 +1,133 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Arial;}{\f1 Calibri;}}
+{\colortbl;\red0\green0\blue0;}
+\paperw11907\paperh16839\margl1134\margr1134\margt1134\margb1134
+\viewkind4\uc1
+\fs24
+\pard\qc\b\fs36 Sistema de Gestión de Transporte\par
+\b0\fs24\par
+\pard\qc Manual de Usuario\par
+\pard\qr Versión 1.0 \tab Fecha: __________\par
+\pard Autor: __________\par
+\par
+\pard\qc\i Figura 1 — Pantalla de Login\i0\par
+\pard Inserte aquí la captura de pantalla del login.\par
+\par
+\pard\b Resumen\b0\par
+- Objetivo: Registrar y gestionar ingreso, espera, salida y no ingreso de camiones, con fotografías y trazabilidad.\par
+- Roles: Guardia (registra ingresos/espera/salidas), Operador (gestiona espera/ingreso, historial y exportación), Administrador (consulta y exportación completas).\par
+- Requisitos: Navegador moderno, conexión estable; en móvil, permisos de cámara.\par
+\par
+\b Acceso y Sesión\b0\par
+- Inicio de sesión: Campos "Nombre", "Apellido", "Rol" (Guardia/Operador/Admin). Botón "Ingresar al Sistema".\par
+- Redirecciones: Guardia → Formulario; Operador/Admin → Dashboard.\par
+- Cerrar sesión: Barra superior → ícono de salida; limpia sesión y vuelve a Inicio.\par
+- Tema: Botón de tema (claro/oscuro) en la esquina superior derecha del login.\par
+\par
+\b Flujo por Rol: Guardia\b0\par
+\ul Formulario de Ingreso / En espera\ulnone\par
+- Campos obligatorios: Patente, Conductor, Empresa.\par
+- Selección: Tipo (Ingreso/En espera) y Área (Inbound/Outbound/Otros).\par
+- Fotografía: Botón "Adjuntar fotografía"; vista previa antes de enviar.\par
+- Acción principal: "Registrar Ingreso" o "Registrar en Espera".\par
+- Mensajes: Éxito ("✅ Registrado correctamente") y error ("❌ Error…").\par
+\par
+\ul En espera\ulnone\par
+- Tarjetas por área con acciones: "Ingresar" (mueve a planta; permite ajustar área) y "No ingresa" (solicita motivo y marca NoIngreso).\par
+- Datos visibles: patente, conductor, empresa, tiempo esperando, fecha/hora, registrado por.\par
+\par
+\ul Dashboard\ulnone\par
+- Visualiza camiones por área, tiempos en planta/espera y miniatura de foto.\par
+- Botón "Registrar salida" en tarjetas de camiones dentro; muestra "✅ Salida registrada correctamente".\par
+\par
+\b Flujo por Rol: Operador\b0\par
+\ul En espera\ulnone\par
+- Ingresar camiones a planta o marcar "No ingresa" (motivo requerido).\par
+- Visualiza tiempo de espera y quién registró.\par
+\par
+\ul Dashboard\ulnone\par
+- Monitorea por área; ve fotos y tiempos.\par
+\par
+\ul Historial\ulnone\par
+- Tabla con filtros y búsqueda.\par
+  • Buscar: por Patente, Conductor, Empresa.\par
+  • Área: Todas / Inbound / Outbound / Otros.\par
+  • Estado: Todos / Ingreso / En espera / Salida.\par
+  • Fechas: Desde y Hasta.\par
+  • Mostrar: 10 / 20 por página y paginación.\par
+- Exportar Excel: Botón "Exportar Excel" (aplica filtros de área y fechas).\par
+- Nombre sugerido: historial_camiones_YYYY-MM-DD_[rango]_[area].xlsx.\par
+- Confirmación: total exportado, fecha y usuario.\par
+\par
+\b Flujo por Rol: Administrador\b0\par
+- Capacidades de consulta y exportación iguales a Operador.\par
+- Buenas prácticas: usar filtros por fecha para auditoría; revisar motivos de NoIngreso.\par
+\par
+\b Estados del Sistema\b0\par
+- Ingreso: dentro de planta (sin salida).\par
+- En espera: fuera de planta, pendiente de ingresar.\par
+- Salida: salida registrada (con fecha y usuario).\par
+- NoIngreso: rechazado, con motivo.\par
+\par
+\b Guía de Capturas y Fotografías\b0\par
+\i Lista sugerida de figuras\i0\par
+- Figura 1 — Pantalla de Login (logo y botón de tema).\par
+- Figura 2 — Formulario "Ingreso" (campos y selects).\par
+- Figura 3 — Botón "Adjuntar fotografía" y vista previa.\par
+- Figura 4 — Mensaje de éxito tras registrar.\par
+- Figura 5 — Pantalla "En espera" con tarjetas por área.\par
+- Figura 6 — Campo "Motivo" al marcar "No ingresa".\par
+- Figura 7 — Dashboard con contadores y tarjetas por área.\par
+- Figura 8 — Botón "Registrar salida" y confirmación.\par
+- Figura 9 — Historial con filtros y tabla.\par
+- Figura 10 — Botón "Exportar Excel" y alerta de exportación.\par
+- Figura 11 — Miniatura de foto y vista ampliada.\par
+- Figura 12 — Barra de navegación con pestañas por rol.\par
+\par
+\i Instrucciones de inserción\i0\par
+- Coloca "Figura X — [descripción]" y debajo "Inserte aquí la captura…".\par
+- Recorta las capturas para enfocar campos/botones clave.\par
+- Mantén tema claro/oscuro consistente en todas las imágenes.\par
+\par
+\b Buenas Prácticas\b0\par
+- Patente: sin espacios ni caracteres extra.\par
+- Área: selecciona la correcta según logística.\par
+- Fotografía: clara, con buena luz y encuadre frontal.\par
+- Motivo "No ingresa": conciso y específico.\par
+\par
+\b Solución de Problemas\b0\par
+- Cámara no se abre: en PC se abre selector; en móvil revisa permisos de cámara.\par
+- No aparece "Historial": solo Operador/Admin tienen acceso.\par
+- Exportación falla: revisa filtros y permisos de descarga del navegador.\par
+- Foto no visible: en producción se aloja en Supabase Storage; verifica conexión y URL pública.\par
+\par
+\b Glosario\b0\par
+- Patente: matrícula del camión.\par
+- Área: Inbound / Outbound / Otros.\par
+- En espera: aún no ingresado.\par
+- Ingreso: dentro de planta.\par
+- Salida: salida registrada.\par
+- NoIngreso: rechazo, con motivo.\par
+\par
+\b Formato del Documento\b0\par
+- Página A4, márgenes de 2 cm; interlineado 1.15.\par
+- Tipografías sugeridas: Arial o Calibri; cuerpo 11 pt; títulos 16–20 pt.\par
+- Numeración: encabezado/pie con número de página.\par
+- Estructura: Portada, Índice, Secciones por rol, Figuras, Anexos.\par
+\par
+\pard\qc\i Figura 2 — Formulario de Ingreso\i0\par
+\pard Inserte aquí la captura del formulario (Ingreso).\par
+\par
+\pard\qc\i Figura 3 — Adjuntar fotografía\i0\par
+\pard Inserte aquí la captura del flujo de fotografía.\par
+\par
+\pard\qc\i Figura 4 — En espera\i0\par
+\pard Inserte aquí la captura de tarjetas en espera.\par
+\par
+\pard\qc\i Figura 5 — Dashboard\i0\par
+\pard Inserte aquí la captura del Dashboard por área.\par
+\par
+\pard\qc\i Figura 6 — Historial y filtros\i0\par
+\pard Inserte aquí la captura de la tabla con filtros.\par
+\par
+}

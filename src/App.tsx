@@ -1602,6 +1602,8 @@ function EsperaAfuera() {
     })
   }, [data.trucks])
 
+  // (revert) Sin contadores locales; se usan stats del backend
+
 
 
   // Exportar a Excel con filtros aplicados
@@ -1675,11 +1677,11 @@ function EsperaAfuera() {
                   </div>
                   <div className="stat-item">
                     <span className="stat-number">{data.stats.inbound}</span>
-                    <span className="stat-label">Dentro</span>
+                    <span className="stat-label">inbound</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-number">{data.stats.outbound}</span>
-                    <span className="stat-label">Salieron</span>
+                    <span className="stat-label">outbound</span>
                   </div>
                 </div>
               )}
