@@ -150,6 +150,9 @@
   * {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
+  /* Enlaces: sin subrayado y color coherente con la tipografía */
+  a { text-decoration: none; color: inherit; }
+  a:hover, a:focus { text-decoration: none; }
   
   body {
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
@@ -1940,6 +1943,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  text-decoration: none;
 }
 
 .mockup-nav-tab::before {
@@ -1999,18 +2003,7 @@
 }
 
 .mockup-nav-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(6,182,212,0.8), 
-    transparent);
-  border-radius: 2px;
+  content: none; /* eliminar línea decorativa inferior */
 }
 
 /* ===== BOTONES DE ICONOS PREMIUM ===== */
@@ -2122,6 +2115,39 @@
 
 /* Animación de entrada suave */
 .mockup-animate-in { animation: fadeUp 300ms ease-out both; }
+
+/* Historial estático: sin animaciones ni efectos hover para mejorar rendimiento */
+.historial-static *,
+.historial-static *::before,
+.historial-static *::after {
+  transition: none !important;
+  animation: none !important;
+}
+.historial-static .modern-table-wrapper:hover::before { opacity: 0 !important; transform: none !important; }
+.historial-static .table-row:hover { background: inherit !important; transform: none !important; box-shadow: none !important; }
+.historial-static .photo-thumb:hover { transform: none !important; background: inherit !important; box-shadow: none !important; }
+.historial-static .modern-action-button:hover { transform: none !important; box-shadow: none !important; }
+
+/* Evitar que la tarjeta principal del Historial se agrande o cambie en hover */
+.historial-static .mockup-card:hover { 
+  transform: none !important; 
+  box-shadow: none !important; 
+  border-color: var(--border) !important; 
+  background: var(--surface) !important; 
+}
+.historial-static .mockup-card:hover::before,
+.historial-static .mockup-card:hover::after { 
+  opacity: 0 !important; 
+}
+
+/* Freno de seguridad: cualquier hover dentro de Historial no debe transformar */
+.historial-static *:hover { 
+  transform: none !important; 
+  box-shadow: none !important; 
+}
+
+:root[data-theme="light"] .historial-static .table-row:hover { background: inherit !important; }
+:root[data-theme="light"] .historial-static .photo-thumb:hover { background: inherit !important; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Panel de filtros moderno */
@@ -5425,7 +5451,7 @@ html { scroll-behavior: smooth; }
   border: 1px solid rgba(148, 163, 184, 0.25);
   background: rgba(2, 6, 23, 0.6);
   backdrop-filter: blur(10px);
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.85rem;
   font-weight: 600;
   padding: 0 0.75rem;

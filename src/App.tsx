@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { Link, Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { login as apiLogin, listTrucks, exitTruck, subscribeRealtime, exportTrucks, type Truck, type FilterOptions, type TrucksResponse, enterTruck, markNeverEnter, registerTruck, registerWaitingTruck } from './api'
 import { useBranding } from './components/BrandingConfig'
 import ThemeToggle from './components/ThemeToggle'
+import LanguageToggle from './components/LanguageToggle'
 import { formatDurationShort, buildPhotoSrc } from './utils'
 import { supabaseReady } from './api.supabase'
 
@@ -228,6 +230,7 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { branding } = useBranding()
+  const { t } = useTranslation()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -244,7 +247,7 @@ function Login() {
       if (r === 'Guardia') navigate('/formulario')
       else navigate('/dashboard')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
+      setError(err instanceof Error ? err.message : t('login.error'))
     } finally {
       setLoading(false)
     }
@@ -261,16 +264,19 @@ function Login() {
             <CheckIcon />
           )}
         </div>
+        {/* Controles: idioma movidos al encabezado global */}
         
         {/* Título y Subtítulo - Estilo Premium */}
-        <h1 className="mockup-title login-premium-title">{branding.companyName}</h1>
-        <p className="mockup-subtitle login-premium-subtitle">Ingrese sus datos para continuar</p>
+        <h1 className="mockup-title login-premium-title">
+          {t('login.title', { company: branding.companyName || 'Nefab' })}
+        </h1>
+        <p className="mockup-subtitle login-premium-subtitle">{t('login.subtitle')}</p>
         
         {/* Formulario - Estilo Premium */}
         <form onSubmit={handleSubmit} className="login-premium-form">
           <input 
             className="mockup-input login-premium-input" 
-            placeholder="Nombre" 
+            placeholder={t('login.name')} 
             value={guardName} 
             onChange={(e) => setGuardName(e.target.value)}
             required
@@ -278,7 +284,7 @@ function Login() {
           
           <input 
             className="mockup-input login-premium-input" 
-            placeholder="Apellido" 
+            placeholder={t('login.lastName')} 
             value={guardLastName} 
             onChange={(e) => setGuardLastName(e.target.value)}
             required
@@ -289,9 +295,9 @@ function Login() {
             value={role} 
             onChange={(e) => setRole(e.target.value as 'Guardia' | 'Operador' | 'Admin')}
           >
-            <option value="Guardia">👮‍♂️ Guardia</option>
-            <option value="Operador">👷‍♂️ Operador</option>
-            <option value="Admin">👨‍💼 Administración</option>
+            <option value="Guardia">👮‍♂️ {t('login.roles.guard')}</option>
+            <option value="Operador">👷‍♂️ {t('login.roles.operator')}</option>
+            <option value="Admin">👨‍💼 {t('login.roles.admin')}</option>
           </select>
           
           {error && (
@@ -304,12 +310,12 @@ function Login() {
             disabled={loading || !guardName || !guardLastName} 
             className={`mockup-button login-premium-button ${loading ? 'mockup-loading' : ''}`}
           >
-            {loading ? 'Ingresando...' : 'Ingresar al Sistema'}
+            {loading ? t('login.signingIn') : t('login.submit')}
           </button>
         </form>
         
         <p className="text-xs text-center mt-6 text-gray-500 login-premium-footer">
-          Sistema de gestión de transporte nefab
+          {t('app.footer')}
         </p>
       </div>
     </div>
@@ -329,6 +335,7 @@ function GuardiaRegistro() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewUrl = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo])
   const { branding } = useBranding()
+  const { t } = useTranslation()
   
   useEffect(() => {
     return () => { if (previewUrl) URL.revokeObjectURL(previewUrl) }
@@ -346,7 +353,7 @@ function GuardiaRegistro() {
     e.preventDefault()
     setMsg(null)
     if (!plate.trim() || !driver.trim() || !transporter.trim()) {
-      setMsg('❌ Complete patente, conductor y empresa')
+      setMsg(t('form.errors.missingFields'))
       return
     }
     setLoading(true)
@@ -354,10 +361,10 @@ function GuardiaRegistro() {
       const payload = { plate: plate.trim().toUpperCase(), driver: driver.trim(), transporter: transporter.trim(), area, photo }
       if (regType === 'Ingreso') {
         await registerTruck(payload)
-        setMsg('✅ Ingreso registrado correctamente')
+        setMsg(t('form.success.enter'))
       } else {
         await registerWaitingTruck(payload)
-        setMsg('✅ Registro en espera creado correctamente')
+        setMsg(t('form.success.waiting'))
       }
       setPlate('')
       setDriver('')
@@ -366,7 +373,7 @@ function GuardiaRegistro() {
       setPhoto(null)
       setRegType('Ingreso')
     } catch (error: unknown) {
-      setMsg(`❌ ${error instanceof Error ? error.message : 'Error al registrar ingreso'}`)
+      setMsg(`❌ ${error instanceof Error ? error.message : t('form.errors.registerEnter')}`)
     } finally {
       setLoading(false)
     }
@@ -386,17 +393,17 @@ function GuardiaRegistro() {
         
         {/* Título y Subtítulo - Estilo Premium */}
         <h1 className="mockup-title login-premium-title">
-          {regType === 'Ingreso' ? 'Formulario de Ingreso' : 'Registrar en Espera'}
+          {regType === 'Ingreso' ? t('form.title.enter') : t('form.title.waiting')}
         </h1>
         <p className="mockup-subtitle login-premium-subtitle">
-          {regType === 'Ingreso' ? 'Complete los datos del camión para registrar el ingreso' : 'Complete los datos para registrar en espera'}
+          {regType === 'Ingreso' ? t('form.subtitle.enter') : t('form.subtitle.waiting')}
         </p>
         
         {/* Formulario - Estilo Premium */}
         <form onSubmit={handleSubmit} className="login-premium-form">
           <input 
             className="mockup-input login-premium-input" 
-            placeholder="Patente" 
+            placeholder={t('form.fields.plate')} 
             value={plate} 
             onChange={(e) => setPlate(e.target.value)}
             required
@@ -404,7 +411,7 @@ function GuardiaRegistro() {
           
           <input 
             className="mockup-input login-premium-input" 
-            placeholder="Conductor" 
+            placeholder={t('form.fields.driver')} 
             value={driver} 
             onChange={(e) => setDriver(e.target.value)}
             required
@@ -412,7 +419,7 @@ function GuardiaRegistro() {
           
           <input 
             className="mockup-input login-premium-input" 
-            placeholder="Empresa" 
+            placeholder={t('form.fields.company')} 
             value={transporter} 
             onChange={(e) => setTransporter(e.target.value)}
             required
@@ -423,8 +430,8 @@ function GuardiaRegistro() {
             value={regType} 
             onChange={(e) => setRegType(e.target.value as 'Ingreso' | 'Espera')}
           >
-            <option value="Ingreso">🚛 Ingreso</option>
-            <option value="Espera">⏳ En espera</option>
+            <option value="Ingreso">{t('form.type.enter')}</option>
+            <option value="Espera">{t('form.type.waiting')}</option>
           </select>
           
           <select 
@@ -432,22 +439,22 @@ function GuardiaRegistro() {
             value={area} 
             onChange={(e) => setArea(e.target.value as Truck['area'])}
           >
-            <option value="Inbound">📥 Inbound</option>
-            <option value="Outbound">📤 Outbound</option>
-            <option value="Otros">📋 Otros</option>
+            <option value="Inbound">📥 {t('common.inbound')}</option>
+            <option value="Outbound">📤 {t('common.outbound')}</option>
+            <option value="Otros">📋 {t('common.others')}</option>
           </select>
           
           {/* Botón de foto */}
           <div className="flex items-center gap-4 flex-wrap">
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => setPhoto(e.target.files?.[0] || null)} />
-            <button type="button" className="mockup-button photo-button-compact" onClick={() => fileInputRef.current?.click()} title="Adjuntar fotografía">
+            <button type="button" className="mockup-button photo-button-compact" onClick={() => fileInputRef.current?.click()} title={t('form.photo.attachTitle')}>
               <PhotoIcon className="w-5 h-5 mr-2" style={{color: '#ffffff !important', width: '20px !important', height: '20px !important', minWidth: '20px !important', minHeight: '20px !important', flexShrink: '0 !important'}} />
-              <span className="text-white font-medium">Foto</span>
+              <span className="text-white font-medium">{t('common.photo')}</span>
             </button>
             {photo && previewUrl && (
               <div className="photo-preview-compact shadow-md rounded-lg overflow-hidden">
-                <img src={previewUrl} alt="Previsualización" className="w-full h-full object-cover" />
-                <button type="button" className="photo-remove-btn hover:bg-red-600 transition-colors duration-200" onClick={() => setPhoto(null)} title="Quitar foto">
+                <img src={previewUrl} alt={t('form.photo.previewAlt')} className="w-full h-full object-cover" />
+                <button type="button" className="photo-remove-btn hover:bg-red-600 transition-colors duration-200" onClick={() => setPhoto(null)} title={t('form.photo.removeTitle')}>
                   <CloseIcon />
                 </button>
               </div>
@@ -464,12 +471,12 @@ function GuardiaRegistro() {
             disabled={loading || !plate || !driver || !transporter} 
             className={`mockup-button login-premium-button ${loading ? 'mockup-loading' : ''}`}
           >
-            {loading ? 'Registrando...' : (regType === 'Ingreso' ? 'Registrar Ingreso' : 'Registrar en Espera')}
+            {loading ? t('form.submitting') : (regType === 'Ingreso' ? t('form.submit.enter') : t('form.submit.waiting'))}
           </button>
         </form>
         
         <p className="text-xs text-center mt-6 text-gray-500 login-premium-footer">
-          Sistema de gestión de transporte nefab
+          {t('app.footer')}
         </p>
       </div>
     </div>
@@ -493,6 +500,8 @@ function Dashboard() {
   const areaContainerRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [areaScrollVisible, setAreaScrollVisible] = useState<Record<string, boolean>>({})
   const role = typeof window !== 'undefined' ? localStorage.getItem('role') : 'Operador'
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language.startsWith('en') ? 'en-US' : 'es-ES'
 
   
 
@@ -584,7 +593,7 @@ function Dashboard() {
     
     try {
       await exitTruck(id)
-      setExitMessage('✅ Salida registrada correctamente')
+      setExitMessage(t('dashboard.success.exit'))
       
       // Actualizar la lista local inmediatamente para mejor UX
       setTrucks(prev => prev.map(truck => 
@@ -651,8 +660,8 @@ function Dashboard() {
               <div className="area-icon-pulse inbound"></div>
             </div>
           ),
-          title: 'Inbound',
-          subtitle: 'Entrada de vehículos',
+          title: t('common.inbound'),
+          subtitle: t('dashboard.areaSubtitle.inbound'),
           gradient: 'from-blue-500/20 via-cyan-500/15 to-blue-600/20',
           borderColor: 'border-blue-400/40',
           accentColor: 'text-blue-300',
@@ -696,8 +705,8 @@ function Dashboard() {
               <div className="area-icon-pulse outbound"></div>
             </div>
           ),
-          title: 'Outbound',
-          subtitle: 'Salida de vehículos',
+          title: t('common.outbound'),
+          subtitle: t('dashboard.areaSubtitle.outbound'),
           gradient: 'from-orange-500/20 via-red-500/15 to-orange-600/20',
           borderColor: 'border-orange-400/40',
           accentColor: 'text-orange-300',
@@ -734,8 +743,8 @@ function Dashboard() {
               <div className="area-icon-pulse otros"></div>
             </div>
           ),
-          title: 'Otros',
-          subtitle: 'Área Otros',
+          title: t('common.others'),
+          subtitle: t('dashboard.areaSubtitle.others'),
           gradient: 'from-purple-500/20 via-pink-500/15 to-purple-600/20',
           borderColor: 'border-purple-400/40',
           accentColor: 'text-purple-300',
@@ -781,8 +790,8 @@ function Dashboard() {
                 </svg>
               </div>
               <div className="dashboard-title-text">
-                <h1 className="dashboard-premium-title">Centro de Control Logístico Nefab</h1>
-                <p className="dashboard-premium-subtitle">Monitoreo avanzado en tiempo real</p>
+                <h1 className="dashboard-premium-title">{t('dashboard.title')}</h1>
+                <p className="dashboard-premium-subtitle">{t('dashboard.subtitle')}</p>
               </div>
             </div>
             
@@ -800,7 +809,7 @@ function Dashboard() {
                     <circle cx="6" cy="6" r="6" fill="url(#activeDotGradient)" />
                 </svg>
               </div>
-              <span>Ingresados</span>
+              <span>{t('dashboard.insideIndicator')}</span>
               </div>
               <div className="status-indicator waiting">
                 <div className="status-pulse waiting">
@@ -814,7 +823,7 @@ function Dashboard() {
                     <circle cx="6" cy="6" r="6" fill="url(#waitingDotGradient)" />
                   </svg>
                 </div>
-                <span>En espera</span>
+                <span>{t('dashboard.waitingIndicator')}</span>
               </div>
             </div>
           </div>
@@ -852,7 +861,7 @@ function Dashboard() {
                       type="button"
                       onClick={(e) => { e.stopPropagation(); toggleCollapseArea(area) }}
                       className="expand-button"
-                      title={collapsedAreas[area] ? "Expandir área" : "Colapsar área"}
+                      title={collapsedAreas[area] ? t('dashboard.expandArea') : t('dashboard.collapseArea')}
                       style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
@@ -876,15 +885,15 @@ function Dashboard() {
                   onScroll={(e) => handleAreaScroll(area, e)}
                   ref={(el) => { areaContainerRefs.current[area] = el }}
                 >
-                  {waitingByArea[area].map((t) => (
+                  {waitingByArea[area].map((truck) => (
                     <div 
-                      key={t.id} 
-                      className={`truck-card-premium ${selectedDashboardTruckId === t.id ? 'expanded' : 'collapsed'}`}
-                      ref={(el) => { cardRefsDash.current[t.id] = el }}
+                      key={truck.id} 
+                      className={`truck-card-premium ${selectedDashboardTruckId === truck.id ? 'expanded' : 'collapsed'}`}
+                      ref={(el) => { cardRefsDash.current[truck.id] = el }}
                       onClick={(e) => {
                         const target = e.target as HTMLElement
                         if (target.closest('.exit-button-premium') || target.closest('.photo-thumb-premium')) return
-                        toggleSelectDashboardTruck(t.id)
+                        toggleSelectDashboardTruck(truck.id)
                       }}
                     >
                       <div className="truck-card-header">
@@ -892,11 +901,11 @@ function Dashboard() {
                           className="truck-plate-premium"
                           onClick={(e) => {
                             e.stopPropagation()
-                            toggleSelectDashboardTruck(t.id)
-                            setSelectedPlateArchive(t.plate)
+                            toggleSelectDashboardTruck(truck.id)
+                            setSelectedPlateArchive(truck.plate)
                           }}
                         >
-                          {t.plate.replace(/\s/g, '').split('').map((ch, i) => (
+                          {truck.plate.replace(/\s/g, '').split('').map((ch, i) => (
                             <span key={i} className="dashboard-plate-char">{ch}</span>
                           ))}
                         </button>
@@ -910,8 +919,8 @@ function Dashboard() {
                             </svg>
                           </div>
                           <div className="detail-content">
-                            <span className="detail-label">Conductor</span>
-                            <span className="detail-value">{t.driver || '-'}</span>
+                            <span className="detail-label">{t('common.driver')}</span>
+                            <span className="detail-value">{truck.driver || '-'}</span>
                           </div>
                         </div>
 
@@ -922,8 +931,8 @@ function Dashboard() {
                             </svg>
                           </div>
                           <div className="detail-content">
-                            <span className="detail-label">Empresa</span>
-                            <span className="detail-value">{t.transporter || '-'}</span>
+                            <span className="detail-label">{t('common.company')}</span>
+                            <span className="detail-value">{truck.transporter || '-'}</span>
                           </div>
                         </div>
 
@@ -934,9 +943,9 @@ function Dashboard() {
                             </svg>
                           </div>
                           <div className="detail-content">
-                            <span className="detail-label">Espera desde</span>
+                            <span className="detail-label">{t('dashboard.waitingSince')}</span>
                             <span className="detail-value">
-                              {new Date(t.waitingAt || t.createdAt).toLocaleString('es-ES', {
+                              {new Date(truck.waitingAt || truck.createdAt).toLocaleString(locale, {
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric',
@@ -954,24 +963,24 @@ function Dashboard() {
                             </svg>
                           </div>
                           <div className="detail-content">
-                            <span className="detail-label">Tiempo en espera</span>
+                            <span className="detail-label">{t('dashboard.waitingTime')}</span>
                             <span className="detail-value-highlight">
-                              {formatDurationShort(nowTs - new Date(t.waitingAt || t.createdAt).getTime())}
+                              {formatDurationShort(nowTs - new Date(truck.waitingAt || truck.createdAt).getTime())}
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
                   ))}
-                  {insideByArea[area].map((t) => (
+                  {insideByArea[area].map((truck) => (
                     <div 
-                      key={t.id} 
-                      className={`truck-card-premium ${selectedDashboardTruckId === t.id ? 'expanded' : 'collapsed'}`}
-                      ref={(el) => { cardRefsDash.current[t.id] = el }}
+                      key={truck.id} 
+                      className={`truck-card-premium ${selectedDashboardTruckId === truck.id ? 'expanded' : 'collapsed'}`}
+                      ref={(el) => { cardRefsDash.current[truck.id] = el }}
                       onClick={(e) => {
                         const target = e.target as HTMLElement
                         if (target.closest('.exit-button-premium') || target.closest('.photo-thumb-premium')) return
-                        toggleSelectDashboardTruck(t.id)
+                        toggleSelectDashboardTruck(truck.id)
                       }}
                     >
                       <div className="truck-card-header">
@@ -979,11 +988,11 @@ function Dashboard() {
                           className="truck-plate-premium"
                           onClick={(e) => {
                             e.stopPropagation()
-                            toggleSelectDashboardTruck(t.id)
-                            setSelectedPlateArchive(t.plate)
+                            toggleSelectDashboardTruck(truck.id)
+                            setSelectedPlateArchive(truck.plate)
                           }}
                         >
-                          {t.plate.replace(/\s/g, '').split('').map((ch, i) => (
+                          {truck.plate.replace(/\s/g, '').split('').map((ch, i) => (
                             <span key={i} className="dashboard-plate-char">{ch}</span>
                           ))}
                         </button>
@@ -999,7 +1008,7 @@ function Dashboard() {
                           </div>
                           <div className="detail-content">
                             <span className="detail-label">Conductor</span>
-                            <span className="detail-value">{t.driver}</span>
+                            <span className="detail-value">{truck.driver}</span>
                           </div>
                         </div>
                         
@@ -1011,7 +1020,7 @@ function Dashboard() {
                           </div>
                           <div className="detail-content">
                             <span className="detail-label">Empresa</span>
-                            <span className="detail-value">{t.transporter}</span>
+                            <span className="detail-value">{truck.transporter}</span>
                           </div>
                         </div>
                         
@@ -1024,7 +1033,7 @@ function Dashboard() {
                           <div className="detail-content">
                             <span className="detail-label">Ingreso</span>
                             <span className="detail-value">
-                              {new Date(t.createdAt).toLocaleString('es-ES', {
+                              {new Date(truck.createdAt).toLocaleString(locale, {
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric',
@@ -1045,7 +1054,7 @@ function Dashboard() {
                             <span className="detail-label">Tiempo en planta</span>
                             <span className="detail-value-highlight">
                               {(() => {
-                                const entry = new Date(t.createdAt)
+                                const entry = new Date(truck.createdAt)
                                 const diffMs = nowTs - entry.getTime()
                                 const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
                                 const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
@@ -1057,7 +1066,7 @@ function Dashboard() {
                       </div>
                       
                       <div className="truck-actions-premium">
-                        {t.photoUrl && (
+                        {truck.photoUrl && (
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation() } }
@@ -1065,7 +1074,7 @@ function Dashboard() {
                             title="Ver fotografía del vehículo"
                           >
                             <img
-                              src={t.photoUrl && t.photoUrl.startsWith('/uploads/') ? (import.meta.env?.VITE_BACKEND_ORIGIN ? `${import.meta.env.VITE_BACKEND_ORIGIN}${t.photoUrl}` : t.photoUrl) : (t.photoUrl || '')}
+                              src={truck.photoUrl && truck.photoUrl.startsWith('/uploads/') ? (import.meta.env?.VITE_BACKEND_ORIGIN ? `${import.meta.env.VITE_BACKEND_ORIGIN}${truck.photoUrl}` : truck.photoUrl) : (truck.photoUrl || '')}
                               alt="Fotografía del vehículo"
                               loading="lazy"
                               className="photo-thumb-img"
@@ -1075,12 +1084,12 @@ function Dashboard() {
                         
                         {(role === 'Guardia') ? (
                           <button 
-                            onClick={() => handleExit(t.id)} 
-                            className={`exit-button-premium ${exitingTrucks.has(t.id) ? 'loading' : ''}`}
-                            disabled={exitingTrucks.has(t.id)}
+                            onClick={() => handleExit(truck.id)} 
+                            className={`exit-button-premium ${exitingTrucks.has(truck.id) ? 'loading' : ''}`}
+                            disabled={exitingTrucks.has(truck.id)}
                             title="Registrar salida del vehículo"
                           >
-                            {exitingTrucks.has(t.id) ? (
+                            {exitingTrucks.has(truck.id) ? (
                               <>
                                 <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -1119,8 +1128,8 @@ function Dashboard() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                         </svg>
                       </div>
-                      <div className="empty-title">Área disponible</div>
-                      <div className="empty-subtitle">Los vehículos aparecerán aquí cuando ingresen a esta zona</div>
+                      <div className="empty-title">{t('dashboard.emptyTitle')}</div>
+                      <div className="empty-subtitle">{t('dashboard.emptySubtitle')}</div>
                     </div>
                   )}
                 </div>
@@ -1163,6 +1172,8 @@ function Dashboard() {
 }
 
 function EsperaAfuera() {
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language === 'es' ? 'es-ES' : 'en-US'
   const [waiting, setWaiting] = useState<Truck[]>([])
   const [inside, setInside] = useState<Truck[]>([])
   const [cardAreas, setCardAreas] = useState<Record<string, Truck['area']>>({})
@@ -1188,8 +1199,8 @@ function EsperaAfuera() {
   }
 
   useEffect(() => {
-    const t = setInterval(() => setNowTs(Date.now()), 1000)
-    return () => clearInterval(t)
+    const timer = setInterval(() => setNowTs(Date.now()), 1000)
+    return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
@@ -1235,10 +1246,10 @@ function EsperaAfuera() {
   const handleEnter = async (id: string, targetArea: Truck['area']) => {
     try {
       await enterTruck(id, targetArea)
-      setMsg('✅ Camión ingresó correctamente')
+      setMsg(t('waiting.success.enter'))
       setWaiting(prev => prev.filter(x => x.id !== id))
     } catch (error: unknown) {
-      setMsg(`❌ Error: ${error instanceof Error ? error.message : 'No se pudo ingresar'}`)
+      setMsg(`❌ Error: ${error instanceof Error ? error.message : t('waiting.error.enter')}`)
     }
   }
 
@@ -1253,13 +1264,13 @@ function EsperaAfuera() {
     const reason = reasonInputs[id] || ''
     try {
       await markNeverEnter(id, reason)
-      setMsg('✅ Marcado como "No ingresa"')
+      setMsg(t('waiting.success.neverEnter'))
       setWaiting(prev => prev.filter(x => x.id !== id))
       // Limpiar el estado después de completar
       setShowReasonInput(prev => ({ ...prev, [id]: false }))
       setReasonInputs(prev => ({ ...prev, [id]: '' }))
     } catch (error: unknown) {
-      setMsg(`❌ Error: ${error instanceof Error ? error.message : 'No se pudo marcar'}`)
+      setMsg(`❌ Error: ${error instanceof Error ? error.message : t('waiting.error.neverEnter')}`)
     }
   }
 
@@ -1296,18 +1307,18 @@ function EsperaAfuera() {
         <div className="espera-header-content">
           <div className="espera-title-container">
             <div className="espera-title-text">
-              <h1 className="espera-main-title">En Espera</h1>
-              <p className="espera-subtitle">Gestión de camiones en espera por área</p>
+              <h1 className="espera-main-title">{t('waiting.title')}</h1>
+              <p className="espera-subtitle">{t('waiting.subtitle')}</p>
             </div>
           </div>
           <div className="espera-stats-summary">
             <div className="espera-stat-item">
               <span className="espera-stat-number">{waiting.length}</span>
-              <span className="espera-stat-label">Total en espera</span>
+              <span className="espera-stat-label">{t('waiting.stats.totalWaiting')}</span>
             </div>
             <div className="espera-stat-item">
               <span className="espera-stat-number">{inside.length}</span>
-              <span className="espera-stat-label">Total activos</span>
+              <span className="espera-stat-label">{t('waiting.stats.totalActive')}</span>
             </div>
           </div>
         </div>
@@ -1326,7 +1337,7 @@ function EsperaAfuera() {
               <div className="espera-area-title-section">
                 <div className="espera-area-info">
                   <h3 className="espera-area-title">{areaKey}</h3>
-                  <p className="espera-area-subtitle">Área {areaKey}</p>
+                  <p className="espera-area-subtitle">{t('waiting.areaHeader', { area: areaKey })}</p>
                 </div>
               </div>
               <div className="espera-header-bottom">
@@ -1334,7 +1345,7 @@ function EsperaAfuera() {
                   <button
                     className="espera-text-btn"
                     onClick={() => toggleCollapse(areaKey)}
-                    title={collapsed[areaKey] ? `Expandir ${areaKey}` : `Colapsar ${areaKey}`}
+                    title={collapsed[areaKey] ? `${t('dashboard.expandArea')} ${areaKey}` : `${t('dashboard.collapseArea')} ${areaKey}`}
                     style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
@@ -1355,8 +1366,8 @@ function EsperaAfuera() {
               <div className="espera-trucks-container">
               {waitingByArea[areaKey].length === 0 ? (
                 <div className="espera-empty-state">
-                  <h4 className="espera-empty-title">Área disponible</h4>
-                  <p className="espera-empty-subtitle">No hay camiones esperando en esta área</p>
+                  <h4 className="espera-empty-title">{t('waiting.emptyTitle')}</h4>
+                  <p className="espera-empty-subtitle">{t('waiting.emptySubtitle')}</p>
                 </div>
               ) : (
                 <>
@@ -1372,36 +1383,36 @@ function EsperaAfuera() {
                       }}
                     >
                       <div className="espera-truck-header">
-                        <button className="espera-truck-plate cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleSelectedTruck(truck) }} title="Ver detalles">
+                        <button className="espera-truck-plate cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleSelectedTruck(truck) }} title={t('common.viewDetails', { defaultValue: 'Ver detalles' })}>
                           {truck.plate.replace(/\s/g, '').split('').map((ch, i) => (
                             <span key={i} className="espera-plate-char">{ch}</span>
                           ))}
                         </button>
                         <div className="espera-truck-status">
-                          <span className="espera-status-text">En espera</span>
+                          <span className="espera-status-text">{t('waiting.truckStatus.waiting')}</span>
                         </div>
                       </div>
                       
                       <div className="espera-truck-details">
                         <div className="espera-detail-row">
-                          <span className="espera-detail-label">Conductor:</span>
+                          <span className="espera-detail-label">{t('common.driver')}:</span>
                           <span className="espera-detail-value">{truck.driver?.toUpperCase()}</span>
                         </div>
                         <div className="espera-detail-row">
-                          <span className="espera-detail-label">Empresa:</span>
+                          <span className="espera-detail-label">{t('common.company')}:</span>
                           <span className="espera-detail-value">{truck.transporter}</span>
                         </div>
                         <div className="espera-detail-row">
-                          <span className="espera-detail-label">Tiempo esperando:</span>
+                          <span className="espera-detail-label">{t('waiting.labels.waitingTimeShort')}</span>
                           <span className="espera-detail-value espera-time">
                             {formatDurationShort(nowTs - new Date(truck.waitingAt || truck.createdAt).getTime())}
                           </span>
                         </div>
                         {truck.waitingAt && (
                           <div className="espera-detail-row">
-                            <span className="espera-detail-label">Desde:</span>
+                            <span className="espera-detail-label">{t('waiting.labels.since')}</span>
                             <span className="espera-detail-value">
-                              {new Date(truck.waitingAt).toLocaleString('es-ES', {
+                              {new Date(truck.waitingAt).toLocaleString(locale, {
                                 day: '2-digit',
                                 month: '2-digit',
                                 hour: '2-digit',
@@ -1414,11 +1425,11 @@ function EsperaAfuera() {
 
                       {truck.photoUrl && (
                         <div className="espera-truck-photo">
-                          <img 
+                            <img 
                             src={truck.photoUrl} 
-                            alt="Foto del camión" 
+                            alt={t('waiting.photoAlt')} 
                             className="espera-photo-img"
-                            title="Doble clic para ver foto grande"
+                            title={t('waiting.photoHint')}
                             onDoubleClick={(e) => { e.stopPropagation() }}
                           />
                         </div>
@@ -1431,22 +1442,22 @@ function EsperaAfuera() {
                             className="espera-area-select"
                             onChange={(e) => setCardAreas(prev => ({ ...prev, [truck.id]: e.target.value as Truck['area'] }))}
                           >
-                            <option value="Inbound">Inbound</option>
-                            <option value="Outbound">Outbound</option>
-                            <option value="Otros">Otros</option>
+                            <option value="Inbound">{t('common.inbound')}</option>
+                            <option value="Outbound">{t('common.outbound')}</option>
+                            <option value="Otros">{t('common.others')}</option>
                           </select>
                           <div className="espera-buttons-row">
                             <button 
                               className="espera-action-btn secondary"
                               onClick={() => handleNeverEnterClick(truck.id)}
                             >
-                              No ingresa
+                              {t('waiting.actions.neverEnter')}
                             </button>
                             <button 
                               className="espera-action-btn primary"
                               onClick={() => handleEnter(truck.id, cardAreas[truck.id] || truck.area)}
                             >
-                              Ingresar
+                              {t('waiting.actions.enter')}
                             </button>
                           </div>
                           {showReasonInput[truck.id] && (
@@ -1454,7 +1465,7 @@ function EsperaAfuera() {
                               <input
                                 type="text"
                                 className="espera-reason-input"
-                                placeholder="Ingrese el motivo de no ingreso"
+                                placeholder={t('waiting.actions.reasonPlaceholder')}
                                 value={reasonInputs[truck.id] || ''}
                                 onChange={(e) => setReasonInputs(prev => ({ ...prev, [truck.id]: e.target.value }))}
                                 onClick={(e) => e.stopPropagation()}
@@ -1475,7 +1486,7 @@ function EsperaAfuera() {
                                   }}
                                   style={{ padding: '4px 8px', fontSize: '14px' }}
                                 >
-                                  Cancelar
+                                  {t('common.cancel')}
                                 </button>
                                 <button
                                   className="espera-action-btn primary"
@@ -1485,7 +1496,7 @@ function EsperaAfuera() {
                                   }}
                                   style={{ padding: '4px 8px', fontSize: '14px' }}
                                 >
-                                  Confirmar
+                                  {t('common.confirm')}
                                 </button>
                               </div>
                             </div>
@@ -1494,7 +1505,7 @@ function EsperaAfuera() {
                       ) : (
                         <div className="espera-truck-info">
                           <div className="espera-info-row">
-                            <span className="espera-info-label">Registrado por:</span>
+                            <span className="espera-info-label">{t('common.registeredBy')}</span>
                             <span className="espera-info-value">{truck.guardName || (truck.waitingBy ? truck.waitingBy.split('@')[0].replace('.', ' ') : 'N/D')}</span>
                           </div>
                         </div>
@@ -1507,7 +1518,7 @@ function EsperaAfuera() {
                       className="espera-view-more-btn"
                       onClick={() => setShowCount(prev => ({ ...prev, [areaKey]: prev[areaKey] + COMPACT_COUNT }))}
                     >
-                      Ver más ({waitingByArea[areaKey].length - showCount[areaKey]} restantes)
+                      {t('waiting.viewMore')} ({waitingByArea[areaKey].length - showCount[areaKey]} {t('common.remaining', { defaultValue: 'restantes' })})
                     </button>
                   )}
 
@@ -1516,7 +1527,7 @@ function EsperaAfuera() {
                       className="espera-show-all-btn"
                       onClick={() => setShowCount(prev => ({ ...prev, [areaKey]: waitingByArea[areaKey].length }))}
                     >
-                      Ver todos
+                      {t('waiting.viewAll')}
                     </button>
                   )}
 
@@ -1537,7 +1548,7 @@ function EsperaAfuera() {
         <button
           className="scroll-top-btn"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          title="Ir arriba"
+          title={t('waiting.scrollTop')}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -1649,14 +1660,16 @@ function EsperaAfuera() {
     setFilters((prev: FilterOptions) => ({ ...prev, page: newPage }))
   }
 
+  const { t, i18n } = useTranslation()
+
   return (
-    <div className="mockup-page mockup-animate-in">
+    <div className="mockup-page historial-static">
       <div className="mockup-card historial-card">
         
         {/* Header Elegante */}
         <div className="text-center mb-6">
-          <h1 className="mockup-title">Historial Completo de Registros</h1>
-          <p className="mockup-subtitle">Consulta, filtra y exporta todos los registros históricos</p>
+          <h1 className="mockup-title">{t('history.title')}</h1>
+          <p className="mockup-subtitle">{t('history.subtitle')}</p>
         </div>
 
         {/* Panel de Filtros Compacto y Elegante */}
@@ -1666,22 +1679,22 @@ function EsperaAfuera() {
               <div className="filter-icon">
                 <SearchIcon className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-semibold">Filtros de Búsqueda</h3>
+              <h3 className="text-lg font-semibold">{t('history.filtersTitle')}</h3>
             </div>
             <div className="filters-actions">
               {data.stats && (
                 <div className="stats-summary">
                   <div className="stat-item">
                     <span className="stat-number">{data.stats.total}</span>
-                    <span className="stat-label">Total</span>
+                    <span className="stat-label">{t('history.total')}</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-number">{data.stats.inbound}</span>
-                    <span className="stat-label">inbound</span>
+                    <span className="stat-label">{t('history.inbound')}</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-number">{data.stats.outbound}</span>
-                    <span className="stat-label">outbound</span>
+                    <span className="stat-label">{t('history.outbound')}</span>
                   </div>
                 </div>
               )}
@@ -1690,7 +1703,7 @@ function EsperaAfuera() {
                 className="modern-action-button"
                 onClick={exportExcel}
                 disabled={exporting}
-                title="Exportar Excel"
+                title={t('history.export')}
               >
                 {exporting ? (
                   <svg className="spinner w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1700,7 +1713,7 @@ function EsperaAfuera() {
                 ) : (
                   <DownloadIcon className="w-5 h-5" />
                 )}
-                <span>{exporting ? 'Exportando…' : 'Exportar Excel'}</span>
+                <span>{exporting ? t('history.exporting') : t('history.export')}</span>
               </button>
 
             </div>
@@ -1710,7 +1723,7 @@ function EsperaAfuera() {
           <div className="filters-row">
             {/* Búsqueda */}
             <div className="filter-group search min-w-0">
-              <label className="filter-label">Buscar</label>
+              <label className="filter-label">{t('history.search')}</label>
               <div className="filter-input-wrapper min-w-0">
                 <SearchIcon className="filter-input-icon" />
                 <input
@@ -1724,37 +1737,37 @@ function EsperaAfuera() {
 
             {/* Área */}
             <div className="filter-group small min-w-0">
-              <label className="filter-label">Área</label>
+              <label className="filter-label">{t('history.area')}</label>
               <select 
                 value={filters.area}
                 onChange={(e) => setFilters((prev) => ({ ...prev, area: e.target.value }))}
                 className="modern-filter-select w-full min-w-0"
               >
-                <option value="">Todas</option>
+                <option value="">{t('history.options.allAreas')}</option>
                 <option value="Inbound">Inbound</option>
                 <option value="Outbound">Outbound</option>
-                <option value="Otros">Otros</option>
+                <option value="Otros">{t('history.options.others')}</option>
               </select>
             </div>
 
             {/* Estado */}
             <div className="filter-group small min-w-0">
-              <label className="filter-label">Estado</label>
+              <label className="filter-label">{t('history.state')}</label>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value as 'all' | 'inside' | 'exited' | 'waiting' }))}
                 className="modern-filter-select w-full min-w-0"
               >
-                <option value="all">Todos</option>
-                <option value="inside">Ingreso</option>
-                <option value="waiting">En espera</option>
-                <option value="exited">Salida</option>
+                <option value="all">{t('history.options.allStatus')}</option>
+                <option value="inside">{t('history.options.inside')}</option>
+                <option value="waiting">{t('history.options.waiting')}</option>
+                <option value="exited">{t('history.options.exited')}</option>
               </select>
             </div>
 
             {/* Fecha Desde */}
             <div className="filter-group date min-w-0">
-              <label className="filter-label">Desde</label>
+              <label className="filter-label">{t('history.from')}</label>
               <div className="filter-input-wrapper min-w-0">
                 <CalendarIcon className="filter-input-icon" />
                 <input
@@ -1768,7 +1781,7 @@ function EsperaAfuera() {
             
             {/* Fecha Hasta */}
             <div className="filter-group date min-w-0">
-              <label className="filter-label">Hasta</label>
+              <label className="filter-label">{t('history.to')}</label>
               <div className="filter-input-wrapper min-w-0">
                 <CalendarIcon className="filter-input-icon" />
                 <input
@@ -1782,7 +1795,7 @@ function EsperaAfuera() {
 
             {/* Registros por página */}
             <div className="filter-group show min-w-0">
-              <label className="filter-label">Mostrar</label>
+              <label className="filter-label">{t('history.show')}</label>
               <div className="filter-input-wrapper min-w-0">
                 <select 
                   value={filters.limit}
@@ -1804,16 +1817,16 @@ function EsperaAfuera() {
           <table className="modern-table">
             <thead>
               <tr>
-                <th className="table-header">Foto</th>
-                <th className="table-header">Patente</th>
-                <th className="table-header">Área</th>
-                <th className="table-header">Estado</th>
-                <th className="table-header">Entrada</th>
-                <th className="table-header">Salida</th>
-                <th className="table-header">Duración</th>
-                <th className="table-header">Tiempo Espera</th>
-                <th className="table-header">Motivo No Ingreso</th>
-                <th className="table-header">Guardia</th>
+                <th className="table-header">{t('history.table.photo')}</th>
+                <th className="table-header">{t('history.table.plate')}</th>
+                <th className="table-header">{t('history.table.area')}</th>
+                <th className="table-header">{t('history.table.state')}</th>
+                <th className="table-header">{t('history.table.entry')}</th>
+                <th className="table-header">{t('history.table.exit')}</th>
+                <th className="table-header">{t('history.table.duration')}</th>
+                <th className="table-header">{t('history.table.waitingTime')}</th>
+                <th className="table-header">{t('history.table.noEntryReason')}</th>
+                <th className="table-header">{t('history.table.guard')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1845,21 +1858,29 @@ function EsperaAfuera() {
                     <span className="area-text">{truck.area}</span>
                   </td>
                   <td className="table-cell status-cell">
-                    <span className={`status-badge ${truck.status === 'Ingreso' ? 'ingreso' : truck.status === 'Espera' ? 'espera' : 'salida'}`}>
-                      {truck.status === 'Ingreso' ? '🟢' : truck.status === 'Espera' ? '🟠' : '🔴'} {truck.status}
-                    </span>
+                    {(() => {
+                      const isEn = i18n.language.startsWith('en')
+                      const badgeClass = truck.status === 'Ingreso' ? 'ingreso' : truck.status === 'Espera' ? 'espera' : 'salida'
+                      const icon = truck.status === 'Ingreso' ? '🟢' : truck.status === 'Espera' ? '🟠' : '🔴'
+                      const label = isEn
+                        ? (truck.status === 'Ingreso' ? 'Inside' : truck.status === 'Espera' ? 'Waiting' : truck.status === 'Salida' ? 'Exited' : truck.status === 'NoIngreso' ? 'No Entry' : truck.status)
+                        : truck.status
+                      return (
+                        <span className={`status-badge ${badgeClass}`}>{icon} {label}</span>
+                      )
+                    })()}
                   </td>
                   <td className="table-cell date-cell">
                     <div className="date-time">
-                      <span className="date">{new Date(truck.createdAt).toLocaleDateString()}</span>
-                      <span className="time">{new Date(truck.createdAt).toLocaleTimeString()}</span>
+                      <span className="date">{new Date(truck.createdAt).toLocaleDateString(i18n.language.startsWith('en') ? 'en-US' : 'es-ES')}</span>
+                      <span className="time">{new Date(truck.createdAt).toLocaleTimeString(i18n.language.startsWith('en') ? 'en-US' : 'es-ES')}</span>
                     </div>
                   </td>
                   <td className="table-cell date-cell">
                     {truck.exitAt ? (
                       <div className="date-time">
-                        <span className="date">{new Date(truck.exitAt).toLocaleDateString()}</span>
-                        <span className="time">{new Date(truck.exitAt).toLocaleTimeString()}</span>
+                        <span className="date">{new Date(truck.exitAt).toLocaleDateString(i18n.language.startsWith('en') ? 'en-US' : 'es-ES')}</span>
+                        <span className="time">{new Date(truck.exitAt).toLocaleTimeString(i18n.language.startsWith('en') ? 'en-US' : 'es-ES')}</span>
                       </div>
                     ) : (
                       <span className="no-data">-</span>
@@ -1910,8 +1931,8 @@ function EsperaAfuera() {
           {data.trucks.length === 0 && (
             <div className="empty-state">
               <div className="empty-icon">📋</div>
-              <div className="empty-title">No hay registros</div>
-              <div className="empty-subtitle">No se encontraron registros con los filtros aplicados</div>
+              <div className="empty-title">{t('history.emptyTitle')}</div>
+              <div className="empty-subtitle">{t('history.emptySubtitle')}</div>
             </div>
           )}
         </div>
@@ -2008,6 +2029,7 @@ function MockupNavigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const toggleMobile = () => setMobileOpen((v) => !v)
   const { branding } = useBranding()
+  const { t } = useTranslation()
 
 
 
@@ -2021,11 +2043,11 @@ function MockupNavigation() {
   // Navegación: "Inicio" lleva siempre al login
   const inicioPath = '/'
   const navItems = [
-    { path: inicioPath, label: 'Inicio', icon: <HomeIcon />, show: true },
-    { path: '/formulario', label: 'Formulario', icon: <ClipboardIcon />, show: role === 'Guardia' },
-    { path: '/espera', label: 'En espera', icon: <ClipboardIcon />, show: true },
-    { path: '/historial', label: 'Historial', icon: <ClipboardIcon />, show: role !== 'Guardia' },
-    { path: '/dashboard', label: 'Dashboard', icon: <ChartIcon />, show: true },
+    { path: inicioPath, label: t('nav.home'), icon: <HomeIcon />, show: true },
+    { path: '/formulario', label: t('nav.form'), icon: <ClipboardIcon />, show: role === 'Guardia' },
+    { path: '/espera', label: t('nav.waiting'), icon: <ClipboardIcon />, show: true },
+    { path: '/historial', label: t('nav.history'), icon: <ClipboardIcon />, show: role !== 'Guardia' },
+    { path: '/dashboard', label: t('nav.dashboard'), icon: <ChartIcon />, show: true },
   ]
 
   return (
@@ -2059,7 +2081,7 @@ function MockupNavigation() {
             <button 
               onClick={toggleMobile}
               className="mockup-icon-button md:hidden hamburger-button"
-              aria-label="Abrir menú de navegación"
+              aria-label={t('nav.openMenu')}
               aria-controls="primary-navigation"
               aria-expanded={mobileOpen}
             >
@@ -2083,7 +2105,8 @@ function MockupNavigation() {
             
             {/* Eliminado botón de configuración */}
             
-            <div className="inline-flex">
+            <div className="inline-flex items-center gap-2">
+              <LanguageToggle />
               <ThemeToggle />
             </div>
             
@@ -2116,6 +2139,7 @@ function MockupNavigation() {
               <span className="ml-2">{supabaseReady ? 'Supabase' : 'Backend local'}</span>
             </div>
             <div className="flex items-center gap-2 mb-2">
+              <LanguageToggle />
               <ThemeToggle />
             </div>
             {navItems.map((item) => (
@@ -2160,7 +2184,8 @@ export default function App() {
     <div className="min-h-screen bg-white text-slate-900 transition-colors dark:bg-gray-900 dark:text-slate-100">
       {/* Theme Toggle visible en login; en páginas internas va en el navbar */}
       {isLoginPage ? (
-        <div className="fixed top-3 right-3 z-50">
+        <div className="fixed top-3 right-3 z-50 flex items-center gap-2">
+          <LanguageToggle />
           <ThemeToggle />
         </div>
       ) : null}
